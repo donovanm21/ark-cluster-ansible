@@ -30,7 +30,7 @@ If you manage your own firewall (UFW, nftables, hardware firewall), set `manage_
 
 ## Reporting a vulnerability
 
-Open a private Gitea issue or email the repository owner. Do not disclose in a public channel first. I'll acknowledge within a few days.
+Open a private security advisory on the repository, or email the maintainer directly. Do not disclose in a public channel first. I'll acknowledge within a few days.
 
 ## What you should check before going public
 

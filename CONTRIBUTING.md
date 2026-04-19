@@ -29,7 +29,7 @@ Don't commit your populated `gameservers.yml` or `inventory_remote` — both are
 
 ## Testing changes against a real host
 
-The deploy workflow (`.gitea/workflows/deploy.yml`) will apply to the configured host on any push to `main`. For local iteration:
+If you've wired up the optional deploy workflow, it will apply to the configured host on any push to `main`. For local iteration:
 
 ```sh
 # On the target host
@@ -48,7 +48,7 @@ ansible-playbook -i inventory_remote main.yml
 - [ ] `gameservers.yml` and `inventory_remote` are NOT in the diff
 - [ ] New variables have a default in `roles/<role>/defaults/main.yml` (or `group_vars/all.yml` for project-wide)
 - [ ] New variables documented in the main `README.md` and/or the relevant role `README.md`
-- [ ] If you changed CI (`.gitea/workflows/` or `.github/workflows/`), tested that the run is green
+- [ ] If you changed CI (`.github/workflows/`), tested that the run is green
 - [ ] Commit messages explain *why*, not just *what*
 
 ## Style

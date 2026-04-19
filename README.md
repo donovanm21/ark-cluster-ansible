@@ -27,7 +27,7 @@ It's the real configuration behind a running production cluster — hardened, do
   - 5-minute crash watchdog — a dead `ShooterGameServer` comes back on its own
   - Optional Discord webhook notifications on lifecycle events
   - logrotate for `ShooterGameServer` and arkmanager logs
-- **CI/CD in the box** — Gitea Actions and GitHub Actions workflows lint, syntax-check, and secret-scan on every push; an optional deploy workflow SSHes to your host and runs the playbook after tests pass
+- **CI/CD in the box** — GitHub Actions workflows lint, syntax-check, and secret-scan on every push; an optional deploy workflow SSHes to your host and runs the playbook after tests pass
 - **Bring-your-own ini files** — drop hand-tuned `Game.ini` / `GameUserSettings.ini` into a local `config/` directory and the playbook overlays them on top of the rendered templates. Beacon.app users: this is for you
 
 ## Quickstart
@@ -129,7 +129,7 @@ Every push runs:
 
 The optional deploy workflow SSHes to your target host and runs `ansible-playbook --check --diff` for a visible dry-run, then applies. Flip between apply and dry-run per run via `workflow_dispatch`.
 
-See [`.gitea/workflows/`](.gitea/workflows/) and [`.github/workflows/`](.github/workflows/).
+See [`.github/workflows/`](.github/workflows/).
 
 ## Contributing
 
