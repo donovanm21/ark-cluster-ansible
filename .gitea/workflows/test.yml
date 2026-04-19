@@ -1,0 +1,82 @@
+name: test
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  lint-and-syntax:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install Ansible + linters
+        run: |
+          python -m pip install --upgrade pip
+          pip install "ansible-core>=2.16" ansible-lint yamllint
+
+      - name: yamllint
+        run: |
+          cat > .yamllint.tmp.yml <<'EOF'
+          extends: default
+          rules:
+            line-length: { max: 200, level: warning }
+            truthy: { check-keys: false }
+            comments: { min-spaces-from-content: 1 }
+            comments-indentation: disable
+            indentation: { spaces: 2, indent-sequences: consistent }
+            document-start: disable
+          ignore: |
+            .ansible/
+            .gitea/
+            .github/
+          EOF
+          yamllint -c .yamllint.tmp.yml .
+
+      - name: ansible-lint
+        run: ansible-lint --offline --exclude .ansible/ || true
+
+      - name: Prepare minimal config for syntax-check
+        run: |
+          cp group_vars/gameservers.yml.example group_vars/gameservers.yml
+          cp inventory_remote.example inventory_remote
+
+      - name: ansible-playbook --syntax-check
+        run: ansible-playbook --syntax-check -i inventory_remote main.yml
+
+      - name: ansible-playbook --list-tasks (structural sanity)
+        run: ansible-playbook --list-tasks -i inventory_remote main.yml
+
+  gitleaks:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  summary:
+    needs: [lint-and-syntax, gitleaks]
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      - name: Report
+        run: |
+          echo "lint-and-syntax: ${{ needs.lint-and-syntax.result }}"
+          echo "gitleaks: ${{ needs.gitleaks.result }}"
+          if [ "${{ needs.lint-and-syntax.result }}" != "success" ] || \
+             [ "${{ needs.gitleaks.result }}" != "success" ]; then
+            exit 1
+          fi
