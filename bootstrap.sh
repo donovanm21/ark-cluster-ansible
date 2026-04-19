@@ -125,40 +125,51 @@ required_ram_gb()  { echo $(( BASE_RAM_GB  + PER_MAP_RAM_GB  * $1 )); }
 required_disk_gb() { echo $(( BASE_DISK_GB + PER_MAP_DISK_GB * $1 )); }
 
 # --- whiptail wrappers ---------------------------------------------------------
-# These all write whiptail's result (stderr) to $WT_TMP and return whiptail's
-# exit code. Callers check $? and read from $WT_TMP. No nested command
-# substitution. No fd juggling.
+# Whiptail writes its ncurses drawing AND its result value to stderr. Capturing
+# stderr with `2>file` therefore gets both — UI escape sequences leak into the
+# "value". To separate them cleanly, we use whiptail's --output-fd flag: the
+# result goes to fd 3, which we redirect to the temp file; the drawing stays
+# on stderr and reaches the terminal normally.
+#
+# Callers read the result with `$(<"$WT_TMP")` after the helper returns.
+
+wt_run() {
+    # Internal: empty the temp file, run whiptail with --output-fd 3, return rc.
+    : >"$WT_TMP"
+    whiptail --output-fd 3 "$@" 3>"$WT_TMP"
+}
 
 wt_input() {
     # $1=title, $2=prompt, $3=default
-    whiptail --title "$1" --backtitle "$WT_BACKTITLE" \
-        --inputbox "$2" 12 $WT_W "$3" 2>"$WT_TMP"
+    wt_run --title "$1" --backtitle "$WT_BACKTITLE" \
+        --inputbox "$2" 12 $WT_W "$3"
 }
 
 wt_password() {
     # $1=title, $2=prompt
-    whiptail --title "$1" --backtitle "$WT_BACKTITLE" \
-        --passwordbox "$2" 12 $WT_W 2>"$WT_TMP"
+    wt_run --title "$1" --backtitle "$WT_BACKTITLE" \
+        --passwordbox "$2" 12 $WT_W
 }
 
 wt_menu() {
-    # $1=title, $2=prompt, $3=height, $4..=key/value pairs
+    # $1=title, $2=prompt, $3=listheight, $4..=key/value pairs
     local title="$1" prompt="$2" h="$3"
     shift 3
-    whiptail --title "$title" --backtitle "$WT_BACKTITLE" \
-        --menu "$prompt" $WT_H $WT_W "$h" "$@" 2>"$WT_TMP"
+    wt_run --title "$title" --backtitle "$WT_BACKTITLE" \
+        --menu "$prompt" $WT_H $WT_W "$h" "$@"
 }
 
 wt_checklist() {
-    # $1=title, $2=prompt, $3=height (of list), $4..=items
+    # $1=title, $2=prompt, $3=listheight, $4..=items
     local title="$1" prompt="$2" h="$3"
     shift 3
-    whiptail --title "$title" --backtitle "$WT_BACKTITLE" \
-        --checklist "$prompt" $WT_H $WT_W "$h" "$@" 2>"$WT_TMP"
+    wt_run --title "$title" --backtitle "$WT_BACKTITLE" \
+        --checklist "$prompt" $WT_H $WT_W "$h" "$@"
 }
 
 wt_yesno() {
     # $1=title, $2=prompt [$3=--defaultno flag]
+    # yesno returns only via exit code; no result to capture.
     local extra=()
     [[ "${3:-}" == "--defaultno" ]] && extra=(--defaultno)
     whiptail --title "$1" --backtitle "$WT_BACKTITLE" \
@@ -166,13 +177,13 @@ wt_yesno() {
 }
 
 wt_msgbox() {
-    # $1=title, $2=msg
+    # $1=title, $2=msg — no result to capture.
     whiptail --title "$1" --backtitle "$WT_BACKTITLE" \
         --msgbox "$2" $WT_H $WT_W
 }
 
 wt_scrollmsg() {
-    # $1=title, $2=msg (scrollable)
+    # $1=title, $2=msg — scrollable msgbox, no result to capture.
     whiptail --title "$1" --backtitle "$WT_BACKTITLE" \
         --scrolltext --msgbox "$2" $WT_H $WT_W
 }
