@@ -1,186 +1,146 @@
-# ARK Cluster Ansible
+# ark-cluster-ansible
 
-Ansible playbook for bringing up a full **ARK: Survival Evolved** cluster on a single Linux host. Supports both **PvE** and **PvP** via one config flag. Uses [arkmanager](https://github.com/arkmanager/ark-server-tools) under the hood.
+> Deploy a production-ready **ARK: Survival Evolved** cluster on a single Linux host with one command. PvE or PvP, any combination of maps, fully automated lifecycle.
+
+[![License: MIT](https://img.shields.io/badge/license-MIT-yellow.svg)](LICENSE)
+[![Ansible](https://img.shields.io/badge/Ansible-2.10%2B-red.svg)](https://docs.ansible.com/)
+[![Platform](https://img.shields.io/badge/platform-Ubuntu%20%7C%20Debian-orange.svg)](#prerequisites)
+[![Powered by arkmanager](https://img.shields.io/badge/powered%20by-arkmanager-blueviolet.svg)](https://github.com/arkmanager/ark-server-tools)
+
+---
+
+## Why this exists
+
+Running a multi-map ARK cluster by hand means wrestling with steamcmd, hand-crafting each `instance.cfg`, keeping port maps in a spreadsheet, and remembering to restart for game updates before your players do. This playbook turns all of that into one YAML file and one command.
+
+It's the real configuration behind a running production cluster — hardened, documented, and scrubbed of secrets — not a sketch.
 
 ## What you get
 
-- **One-shot deployment** of a multi-map ARK cluster — pick any combination of Ragnarok, TheIsland, ScorchedEarth, Aberration, Extinction, Valguero, TheCenter, CrystalIsles, Fjordur, Genesis, Genesis 2, Lost Island.
-- **PvE or PvP** selected by a single `server_mode` flag; the relevant `.ini` switches flip automatically.
-- **Sensible `Game.ini` and `GameUserSettings.ini` defaults**, fully overridable per-map via a `config/` overlay.
-- **Self-sustaining lifecycle automation** — runs without hand-holding once deployed:
-  - Daily restart + game update + mod update + backup pipeline (03:30 warnings, 04:00 stop, 04:10 update).
-  - Hourly game-update and mod-update checks (triggers an unscheduled restart if needed).
-  - 5-minute crash watchdog — any map that dies between restarts comes back automatically.
-  - Optional scheduled wild dino wipes.
-  - Optional Discord webhook notifications for lifecycle events.
-  - logrotate config for ShooterGameServer + arkmanager logs.
-- **Built-in CI/CD** — Gitea Actions (and GitHub Actions mirror) run yamllint, ansible-lint, `ansible-playbook --syntax-check`, and gitleaks on every push. A Gitea deploy workflow applies to your target host on successful test.
+- **Multi-map cluster** with cross-map tame/item transfer via a shared cluster ID
+- **One flag** (`server_mode: PvE | PvP`) flips the relevant `.ini` switches for your play style
+- **Fully automated lifecycle** — the cluster keeps itself alive after `ansible-playbook` exits:
+  - Daily restart + backup + game update + mod update pipeline (with in-game countdown broadcasts)
+  - Hourly game/mod update checks with auto-restart when new versions ship
+  - 5-minute crash watchdog — a dead `ShooterGameServer` comes back on its own
+  - Optional Discord webhook notifications on lifecycle events
+  - logrotate for `ShooterGameServer` and arkmanager logs
+- **CI/CD in the box** — Gitea Actions and GitHub Actions workflows lint, syntax-check, and secret-scan on every push; an optional deploy workflow SSHes to your host and runs the playbook after tests pass
+- **Bring-your-own ini files** — drop hand-tuned `Game.ini` / `GameUserSettings.ini` into a local `config/` directory and the playbook overlays them on top of the rendered templates. Beacon.app users: this is for you
 
-## Repository layout
+## Quickstart
+
+```bash
+# 1. Clone
+git clone https://github.com/<your-fork>/ark-cluster-ansible.git
+cd ark-cluster-ansible
+
+# 2. Copy and edit the cluster config (gitignored — your values stay local)
+cp group_vars/gameservers.yml.example group_vars/gameservers.yml
+cp inventory_remote.example           inventory_remote
+${EDITOR:-vim} group_vars/gameservers.yml
+
+# 3. Run it
+ansible-playbook -i inventory_remote main.yml
+```
+
+That's the whole onboarding. If it goes wrong, open an issue — we'd rather fix the playbook than leave you stuck.
+
+Prefer a fully-populated starter?
+
+| Starter | Style |
+|---|---|
+| [docs/examples/gameservers.pve.yml](docs/examples/gameservers.pve.yml) | 3-map PvE, friendly progression, dino wipes on |
+| [docs/examples/gameservers.pvp.yml](docs/examples/gameservers.pvp.yml) | 3-map PvP, closer-to-official rates, offline raid protection |
+
+## What a cluster looks like
 
 ```
-.
-├── main.yml                          top-level playbook
-├── group_vars/
-│   ├── all.yml                       project-wide defaults (ark_user, ark_home, etc.)
-│   └── gameservers.yml.example       copy to gameservers.yml and edit
-├── inventory_remote.example          copy to inventory_remote and edit
-├── roles/
-│   ├── provision/                    OS deps, ark user, sudoers, firewall
-│   ├── arkmanager/                   arkmanager netinstall
-│   ├── maps/                         per-map instance.cfg, Game.ini, mods
-│   └── system/                       crontab, watchdog, logrotate, helper scripts
-├── .gitea/workflows/                 test.yml + deploy.yml (Gitea Actions)
-├── .github/workflows/                test.yml (GitHub Actions mirror)
-└── docs/
-    ├── examples/gameservers.pve.yml  full PvE cluster example
-    └── examples/gameservers.pvp.yml  full PvP cluster example
+          group_vars/gameservers.yml
+       +------------------------------+
+       |  server_mode: PvE            |
+       |  maps:                       |
+       |   - Ragnarok                 |
+       |   - TheIsland                |
+       |   - ScorchedEarth            |
+       |  cluster_name: myCluster     |
+       +--------------+---------------+
+                      |  ansible-playbook
+                      v
+    +--------------------------------------------+
+    |            your Linux host                 |
+    |  +----------+  +----------+  +----------+  |
+    |  | Ragnarok |  |TheIsland |  | Scorched |  |
+    |  |  :7779   |  |  :7791   |  |  :7777   |  |
+    |  +----+-----+  +-----+----+  +-----+----+  |
+    |       |              |             |       |
+    |       +------- cluster ------------+       |
+    |           (cross-map transfers)            |
+    |                                            |
+    |   crons:  update-check | watchdog | backup |
+    +--------------------------------------------+
 ```
 
 ## Prerequisites
 
-- A fresh Linux host (Ubuntu 20.04+ / Debian 11+ tested) with SSH access.
-- Ansible 2.10+ on your workstation (or the target host, if you're running locally).
-- ~50 GB disk per map for ARK content.
-- ~6 GB RAM per *running* map (the host can have more maps configured than running concurrently).
-- Open TCP/UDP for each map's game port, query port, and RCON port (default scheme in the example config avoids conflicts).
+- Linux host — Ubuntu 20.04+ or Debian 11+
+- Ansible 2.10 or newer (on your workstation or the target host)
+- Roughly **50 GB disk** and **6 GB RAM** per concurrently running map
+- Open TCP/UDP for each map's game port (7777+), Steam query port (27015+), RCON port (32330+)
 
-## Quickstart
+The playbook installs arkmanager, steamcmd, and every other dependency. You only supply the host.
 
-```sh
-# 1. Clone
-git clone https://your.gitea/Homelab/ark-cluster-ansible.git
-cd ark-cluster-ansible
+## Configuration
 
-# 2. Copy and edit the example config + inventory
-cp group_vars/gameservers.yml.example group_vars/gameservers.yml
-cp inventory_remote.example inventory_remote
-${EDITOR:-vim} group_vars/gameservers.yml
+A quick sketch of the config surface — full variable reference in the per-role READMEs below.
 
-# 3. Run
-ansible-playbook -i inventory_remote main.yml
-```
+| What | Where |
+|---|---|
+| Who you are | `location`, `server_tag`, `server_mode` |
+| Maps, ports, mods | the `maps:` list |
+| Gameplay feel | taming / harvest / XP multipliers, decay periods |
+| Lifecycle | `daily_update_hour`, `enable_watchdog`, `enable_dino_wipe` |
+| Admins | the `admins:` list of 17-digit SteamIDs |
+| Discord notifications | `discord_webhook_url` |
+| Your own ini files | drop into `./config/` — overlays the rendered templates |
 
-Both `group_vars/gameservers.yml` and `inventory_remote` are gitignored so your cluster-specific values (admin passwords, SteamIDs, map topology) never leak to the repo.
+Per-role documentation:
 
-For ready-to-go templates, see [docs/examples/](docs/examples/):
-- [gameservers.pve.yml](docs/examples/gameservers.pve.yml) — PvE cluster, faster progression
-- [gameservers.pvp.yml](docs/examples/gameservers.pvp.yml) — PvP cluster, offline raid protection
+- [roles/provision/README.md](roles/provision/README.md) — OS deps, ark user, sudoers, firewall
+- [roles/arkmanager/README.md](roles/arkmanager/README.md) — arkmanager netinstall
+- [roles/maps/README.md](roles/maps/README.md) — per-map configs, Game.ini, mods
+- [roles/system/README.md](roles/system/README.md) — crontab, watchdog, logrotate, scripts
 
-## Bringing your own ini files
+## Continuous integration
 
-If you tune via [Beacon](https://usebeacon.app) or have hand-edited `.ini` files, drop them into a local `config/` directory and they'll overlay the rendered templates:
+Every push runs:
 
-```
-config/
-  Game.ini                              # cluster-wide (optional)
-  maps/
-    Ragnarok/GameUserSettings.ini       # per-map (optional)
-    TheIsland/GameUserSettings.ini
-```
+1. **yamllint** — style and structural linting
+2. **ansible-lint** — anti-pattern detection (advisory)
+3. **ansible-playbook --syntax-check** + `--list-tasks` — structural sanity
+4. **gitleaks** — secret scan over the full git history
 
-The playbook renders the default template first, then overwrites with your file if present. The `config/` directory is gitignored.
+The optional deploy workflow SSHes to your target host and runs `ansible-playbook --check --diff` for a visible dry-run, then applies. Flip between apply and dry-run per run via `workflow_dispatch`.
 
-## Key variables
-
-All variables below live in `group_vars/gameservers.yml`. See [group_vars/all.yml](group_vars/all.yml) for the project-wide identity vars (`ark_user`, `ark_home`, `ark_server_root`, `arkmanager_config_dir`).
-
-### Identity
-| Variable | Default | Purpose |
-|---|---|---|
-| `location` | — | 2-letter region code shown in SessionName (`US`, `EU`, `ZA`, …) |
-| `server_tag` | — | Short cluster tag |
-| `server_mode` | — | `PvE` or `PvP` — flips the relevant `.ini` switches |
-
-### Gameplay tuning (maps role defaults)
-| Variable | Default | Purpose |
-|---|---|---|
-| `taming_speed_multiplier` | `4.5` | How fast taming progresses |
-| `harvest_amount_multiplier` | `2` | Resources per harvest |
-| `harvest_health_multiplier` | `2` | Node HP before depletion |
-| `xp_multiplier` | `1` | Player XP gain |
-| `max_tamed_dinos` | `10000` | Cluster-wide tame cap |
-| `override_official_difficulty` | `5` | Wild dino level scaling |
-| `player_damage_multiplier` | `1.0` | Player damage dealt |
-| `pve_dino_decay_period_multiplier` | `5` | PvE: dino decay grace (days) |
-| `pve_structure_decay_period_multiplier` | `2.5` | PvE: structure decay grace |
-| `resources_respawn_period_multiplier` | `0.75` | How fast resource nodes respawn |
-
-### Lifecycle automation (system role defaults)
-| Variable | Default | Purpose |
-|---|---|---|
-| `enable_daily_restart` | `true` | Daily restart+update+backup pipeline |
-| `daily_update_hour` | `4` | Hour (24h) to run the daily pipeline |
-| `enable_dino_wipe` | `false` | Scheduled wild dino wipe |
-| `dino_wipe_hours` | `[0, 12]` | Hours to wipe wild dinos |
-| `enable_watchdog` | `true` | 5-min crash recovery cron |
-| `watchdog_interval_minutes` | `5` | How often the watchdog runs |
-
-### Provision role flags
-| Variable | Default | Purpose |
-|---|---|---|
-| `manage_sudoers` | `true` | Create `/etc/sudoers.d/<ark_user>` with NOPASSWD |
-| `manage_firewall` | `true` | Purge UFW (legacy behaviour; opt out if you manage your own firewall) |
-
-### Map entries
-Each map in the `maps:` list takes the same shape:
-
-```yaml
-- map_name_ark: "Ragnarok"          # internal ARK map ID
-  map_name: "Ragnarok"               # display name
-  map_rcon_port: 32332               # RCON port (unique per map)
-  map_ark_port: 7779                 # game port (unique per map)
-  map_steam_port: 27017              # Steam query port (unique per map)
-  map_admin_password: "CHANGE_ME"    # RCON admin password
-  map_max_players: 25                # player cap
-  map_mods_enabled: ""               # comma-separated Steam Workshop IDs
-  cluster_name: "MyCluster"          # shared across maps for cross-transfer
-```
-
-## PvE vs PvP
-
-Setting `server_mode: PvE` vs `PvP` flips these automatically:
-
-| Setting | PvE | PvP |
-|---|---|---|
-| `bAutoPvETimer` | `True` | `False` |
-| `bDisableFriendlyFire` | `True` | `False` |
-| `PreventOfflinePvP` | `False` | `True` |
-| `PvPDinoDecay` / `PvPStructureDecay` | `False` | `True` |
-| `ark_ServerPVE` | `True` | `False` |
-
-Everything else is mode-agnostic. For deeper tuning, copy one of the [docs/examples/](docs/examples/) configs as a starting point.
-
-## CI/CD
-
-`.gitea/workflows/test.yml` (mirrored as `.github/workflows/test.yml`) runs on every push and PR:
-
-1. **yamllint** — style + structural linting of every YAML file.
-2. **ansible-lint** — advisory; flags anti-patterns but doesn't block the build.
-3. **ansible-playbook --syntax-check** + `--list-tasks` — structural sanity.
-4. **gitleaks** — scans the full history for leaked secrets.
-
-`.gitea/workflows/deploy.yml` runs after a successful test workflow on `main` (or on manual `workflow_dispatch`):
-
-1. SSHes to your target host (`ARK_DEPLOY_HOST`, `ARK_DEPLOY_USER`, `ARK_DEPLOY_SSH_KEY` secrets).
-2. `git reset --hard origin/main` in `/root/ark-cluster-ansible` (your local `gameservers.yml` is gitignored and preserved).
-3. Always runs `ansible-playbook --check --diff` for a visible dry-run report.
-4. Applies unless `workflow_dispatch` was invoked with `mode=check`.
-5. Smoke-test: `arkmanager status @all` + crontab spot-check.
-
-To wire it up on your Gitea: set the three secrets above on the repo (Settings → Actions → Secrets) and ensure your runner has a label including `ubuntu-latest`.
-
-## Security notes
-
-- **NOPASSWD sudo**: the provision role creates `/etc/sudoers.d/<ark_user>` granting passwordless sudo to the ark user. This is required for `arkmanager` lifecycle operations. Set `manage_sudoers: false` if you want to manage sudoers yourself.
-- **UFW removal**: historically the playbook purges UFW to avoid a silently-blocking firewall. This is opt-out (`manage_firewall: false`). A future improvement is explicit UFW rules for the ARK ports — PRs welcome.
-- **Admin passwords**: the example config ships `map_admin_password: "CHANGE_ME"`. Change before first deploy.
-- **Secrets in CI**: the deploy workflow requires the target host SSH private key as a Gitea secret. Treat that repo accordingly.
+See [`.gitea/workflows/`](.gitea/workflows/) and [`.github/workflows/`](.github/workflows/).
 
 ## Contributing
 
-Issues and pull requests welcome. CI must be green before merge.
+PRs welcome — see [CONTRIBUTING.md](CONTRIBUTING.md). The bar is:
+
+- CI is green
+- `gameservers.yml` and `inventory_remote` stay out of the diff
+- New variables have defaults and a line in the docs
+
+## Security
+
+- [SECURITY.md](SECURITY.md) documents the NOPASSWD sudo default, the UFW-removal default, and what to avoid committing
+- Report vulnerabilities privately to the maintainer before any public disclosure
+
+## Acknowledgements
+
+Built on top of [arkmanager / ark-server-tools](https://github.com/arkmanager/ark-server-tools). Thanks to that project and everyone who's poked holes in this playbook over the years.
 
 ## License
 
-[MIT](LICENSE).
+[MIT](LICENSE). Fork it, run it, ship your own cluster.
