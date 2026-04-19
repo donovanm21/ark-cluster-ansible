@@ -7,6 +7,11 @@
 59 * * * * /bin/sh /home/ark/ark_update_checker.sh
 30 * * * * /bin/sh /home/ark/ark_mod_checker.sh
 
+{% if enable_watchdog | default(True) %}
+## Crash watchdog — restarts maps that aren't running
+*/{{ watchdog_interval_minutes | default(5) }} * * * * /bin/bash /home/ark/ark_watchdog.sh
+{% endif %}
+
 {% if enable_daily_restart | default(True) %}
 ## Daily restart + update (runs at {{ '%02d'|format(update_hour) }}:00 server time)
 {{ 30 }} {{ (update_hour - 1) % 24 }} * * * /usr/local/bin/arkmanager broadcast "Server Restart & Update in 30mins" @all

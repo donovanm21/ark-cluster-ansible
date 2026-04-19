@@ -1,0 +1,22 @@
+/home/ark/ARK/ShooterGame/Saved/Logs/*.log {
+    daily
+    rotate 14
+    compress
+    delaycompress
+    missingok
+    notifempty
+    copytruncate
+    su ark ark
+    create 0644 ark ark
+}
+
+/var/log/arkmanager/*.log
+/var/log/arkmanager/*/*.log {
+    weekly
+    rotate 8
+    compress
+    delaycompress
+    missingok
+    notifempty
+    copytruncate
+}

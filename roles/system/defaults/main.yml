@@ -1,2 +1,15 @@
 ---
-# defaults file for system
+# Defaults for the system role.
+# Override any of these in group_vars/gameservers.yml.
+
+# Daily restart + update pipeline (03:30 warnings → 04:00 stop → 04:10 update)
+enable_daily_restart: true
+daily_update_hour: 4
+
+# Scheduled wild dino wipes (off by default; enable and set hours if desired)
+enable_dino_wipe: false
+dino_wipe_hours: [0, 12]
+
+# Crash-recovery watchdog — checks every N minutes and restarts crashed maps
+enable_watchdog: true
+watchdog_interval_minutes: 5

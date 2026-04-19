@@ -151,3 +151,18 @@ admins: []
 # admins:
 #   - 76561190000000001
 #   - 76561190000000002
+
+# Lifecycle automation — defaults documented here for visibility.
+# Override only if you want to change the behaviour.
+#
+# Daily restart/update pipeline:
+# enable_daily_restart: true
+# daily_update_hour: 4          # 04:00 server time: stop -> backup -> update -> restart
+#
+# Scheduled wild dino wipes (optional):
+# enable_dino_wipe: false
+# dino_wipe_hours: [0, 12]
+#
+# Crash-recovery watchdog (checks every N minutes, restarts crashed maps):
+# enable_watchdog: true
+# watchdog_interval_minutes: 5

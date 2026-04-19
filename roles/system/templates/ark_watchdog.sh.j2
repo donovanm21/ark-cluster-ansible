@@ -1,0 +1,39 @@
+#!/bin/bash
+# Watchdog: restart any ShooterGameServer that isn't running.
+# Rendered by ansible from roles/system/templates/ark_watchdog.sh.j2 —
+# edits made by hand will be overwritten on the next deploy.
+#
+# Skip window is the daily-restart hour: during the planned stop, maps
+# are expected to be down, so don't fight the update pipeline.
+set -u
+
+ARKMANAGER=/usr/local/bin/arkmanager
+UPDATE_HOUR={{ daily_update_hour | default(4) }}
+NOW_HOUR=$(date +%-H)
+
+# If the daily restart is in progress (from update_hour-1:30 through update_hour:30),
+# skip this tick — the update pipeline owns the servers during that window.
+SKIP_START=$(( (UPDATE_HOUR - 1 + 24) % 24 ))
+if [ "$NOW_HOUR" = "$SKIP_START" ] || [ "$NOW_HOUR" = "$UPDATE_HOUR" ]; then
+  exit 0
+fi
+
+notify() {
+  local msg="$1"
+{% if discord_webhook_url is defined and discord_webhook_url %}
+  curl -fsS -H "Content-Type: application/json" \
+    -d "$(printf '{"content": "[watchdog] %s"}' "$msg")" \
+    "{{ discord_webhook_url }}" >/dev/null 2>&1 || true
+{% endif %}
+  logger -t ark-watchdog "$msg"
+}
+
+{% for map in maps %}
+# ---- {{ map.map_name }} ----
+if ! "$ARKMANAGER" status @{{ map.map_name }} 2>/dev/null | grep -qE 'Server running.*Yes'; then
+  notify "{{ map.map_name }} not running — starting"
+  "$ARKMANAGER" start @{{ map.map_name }} >/dev/null 2>&1 &
+fi
+{% endfor %}
+
+exit 0

@@ -39,6 +39,23 @@
     owner: ark
     mode: '0755'
 
+# Render the crash-recovery watchdog script
+- name: Render the watchdog script
+  template:
+    src: ark_watchdog.sh.j2
+    dest: /home/ark/ark_watchdog.sh
+    owner: ark
+    mode: '0755'
+
+# Install logrotate config for arkmanager + ShooterGameServer logs
+- name: Install logrotate config for arkmanager logs
+  copy:
+    src: logrotate_arkmanager
+    dest: /etc/logrotate.d/arkmanager
+    owner: root
+    group: root
+    mode: '0644'
+
 # Render the crontab from configured maps/schedule
 - name: Render the crontab file
   template:
