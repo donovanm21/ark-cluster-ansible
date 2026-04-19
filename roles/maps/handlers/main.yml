@@ -1,0 +1,5 @@
+---
+# handlers file for maps
+- name: restart map
+  command: arkmanager restart @{{ item.map_name }}
+  loop: "{{ maps }}"

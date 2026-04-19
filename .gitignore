@@ -1,0 +1,27 @@
+# User-specific cluster config — NEVER commit. Copy gameservers.yml.example
+# to gameservers.yml locally; the real file stays out of the repo so
+# passwords, mod lists, and SteamIDs don't leak.
+/group_vars/gameservers.yml
+
+# User-specific ini overlays (see README "Bringing your own ini files")
+/config/
+
+# User-specific inventory overrides — the tracked file is inventory_remote.example
+/inventory_remote
+/inventory*.local
+
+# Ansible
+*.retry
+.vault_pass
+.ansible/
+roles/*/tests/inventory
+*.pyc
+__pycache__/
+
+# Editor / OS
+.DS_Store
+*.swp
+*.swo
+*~
+.idea/
+.vscode/

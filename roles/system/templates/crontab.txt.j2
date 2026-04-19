@@ -1,0 +1,33 @@
+{% set update_hour = daily_update_hour | default(4) %}
+{% set wipe_hours = dino_wipe_hours | default([0, 12]) %}
+# Start Servers on reboot
+@reboot /bin/sh /home/ark/ark_map_start.sh
+
+## Auto update checkers
+59 * * * * /bin/sh /home/ark/ark_update_checker.sh
+30 * * * * /bin/sh /home/ark/ark_mod_checker.sh
+
+{% if enable_daily_restart | default(True) %}
+## Daily restart + update (runs at {{ '%02d'|format(update_hour) }}:00 server time)
+{{ 30 }} {{ (update_hour - 1) % 24 }} * * * /usr/local/bin/arkmanager broadcast "Server Restart & Update in 30mins" @all
+{{ 45 }} {{ (update_hour - 1) % 24 }} * * * /usr/local/bin/arkmanager broadcast "Server Restart & Update in 15mins" @all
+{{ 55 }} {{ (update_hour - 1) % 24 }} * * * /usr/local/bin/arkmanager broadcast "Server Restart & Update in 5mins" @all
+0 {{ update_hour }} * * * /usr/local/bin/arkmanager stop @all
+2 {{ update_hour }} * * * tar -cf /home/ark/ARK-Backups/cluster_files_$(date "+\%Y-\%m-\%d").tar {{ ark_server_root | default('/home/ark/ARK') }}/ShooterGame/Saved/clusters/
+5 {{ update_hour }} * * * /usr/local/bin/arkmanager backup @all
+7 {{ update_hour }} * * * /usr/local/bin/arkmanager update
+10 {{ update_hour }} * * * /usr/local/bin/arkmanager update --update-mods
+{% for map in maps %}
+{{ 14 + (loop.index0 * 2) }} {{ update_hour }} * * * /usr/local/bin/arkmanager start @{{ map.map_name }}
+{% endfor %}
+{% endif %}
+
+{% if enable_dino_wipe | default(False) %}
+## Wild dino wipes
+{% for hour in wipe_hours %}
+30 {{ (hour - 1) % 24 }} * * * /usr/local/bin/arkmanager broadcast "Dino Wipe in 30mins" @all
+45 {{ (hour - 1) % 24 }} * * * /usr/local/bin/arkmanager broadcast "Dino Wipe in 15mins" @all
+55 {{ (hour - 1) % 24 }} * * * /usr/local/bin/arkmanager broadcast "Dino Wipe in 5mins" @all
+0 {{ hour }} * * * /bin/sh /home/ark/ark_rcon_cmd.sh
+{% endfor %}
+{% endif %}

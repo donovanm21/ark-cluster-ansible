@@ -1,0 +1,113 @@
+---
+# Create the files directory
+- name: Create the /etc/arkmanager/files directory
+  file:
+    path: /etc/arkmanager/files
+    state: directory
+    owner: ark
+    mode: '0755'
+
+# Create the SaveGames directory
+- name: Create the /home/ark/ARK/ShooterGame/Saved/SaveGames directory
+  file:
+    path: "{{ ark_server_root | default('/home/ark/ARK') }}/ShooterGame/Saved/SaveGames"
+    state: directory
+    owner: ark
+    mode: '0755'
+
+# Setup map folders
+- name: Create the directories for maps
+  file:
+    path: /etc/arkmanager/files/{{ item.map_name }}
+    state: directory
+    owner: ark
+    mode: '0755'
+  loop: "{{ maps }}"
+
+# Set Multihome IP
+- name: Set ark_MultiHome with the default IPv4 address
+  set_fact:
+    ark_MultiHome: "{{ ansible_default_ipv4.address }}"
+
+# Copy the instance config file for maps
+- name: Copy map instance file
+  template:
+    src: instance.cfg.j2
+    dest: /etc/arkmanager/instances/{{ item.map_name }}.cfg
+    owner: ark
+    mode: '0644'
+  loop: "{{ maps }}"
+
+# Render the default GameUserSettings.ini template for each map
+- name: Render default GameUserSettings.ini
+  template:
+    src: GameUserSettings.ini.j2
+    dest: /etc/arkmanager/files/{{ item.map_name }}/GameUserSettings.ini
+    owner: ark
+    mode: '0644'
+  loop: "{{ maps }}"
+  notify: restart map
+
+# If the user has provided a per-map override, overlay it on top of the default
+- name: Check for per-map GameUserSettings.ini override
+  stat:
+    path: "{{ user_config_dir | default(playbook_dir ~ '/config') }}/maps/{{ item.map_name }}/GameUserSettings.ini"
+  loop: "{{ maps }}"
+  register: gus_overrides
+
+- name: Overlay per-map GameUserSettings.ini override
+  copy:
+    src: "{{ item.stat.path }}"
+    dest: /etc/arkmanager/files/{{ item.item.map_name }}/GameUserSettings.ini
+    owner: ark
+    mode: '0644'
+  loop: "{{ gus_overrides.results }}"
+  loop_control:
+    label: "{{ item.item.map_name }}"
+  when: item.stat.exists
+  notify: restart map
+
+# Render the default Game.ini template (cluster-wide)
+- name: Render default Game.ini
+  template:
+    src: Game.ini.j2
+    dest: /etc/arkmanager/files/Game.ini
+    owner: ark
+    mode: '0644'
+  notify: restart map
+
+# If the user has provided a Game.ini override, overlay it
+- name: Check for Game.ini override
+  stat:
+    path: "{{ user_config_dir | default(playbook_dir ~ '/config') }}/Game.ini"
+  register: game_override
+
+- name: Overlay Game.ini override
+  copy:
+    src: "{{ game_override.stat.path }}"
+    dest: /etc/arkmanager/files/Game.ini
+    owner: ark
+    mode: '0644'
+  when: game_override.stat.exists
+  notify: restart map
+
+# Create the Ark Admins SteamID file
+- name: Create the ark admin file
+  file:
+    path: "{{ ark_server_root | default('/home/ark/ARK') }}/ShooterGame/Saved/AllowedCheaterSteamIDs.txt"
+    state: touch
+    mode: '0644'
+
+# Add SteamIDs for ark admins
+- name: Add SteamIDs for ark admins
+  lineinfile:
+    dest: "{{ ark_server_root | default('/home/ark/ARK') }}/ShooterGame/Saved/AllowedCheaterSteamIDs.txt"
+    line: '{{ item }}'
+    state: present
+  loop: "{{ admins }}"
+
+# Install enabled mods
+- name: Install and update enabled mods
+  command: arkmanager update --update-mods @{{ item.map_name }}
+  loop: "{{ maps }}"
+  notify: restart map

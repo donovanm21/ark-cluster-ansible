@@ -1,0 +1,41 @@
+---
+# Install needed tools
+- name: Update the apt cache and install tools
+  apt:
+    name:
+      - htop
+      - git
+      - perl-modules
+      - curl
+      - lsof
+      - libc6-i386
+      - lib32gcc-s1
+      - bzip2
+    state: present
+    #update_cache: yes
+    #cache_valid_time: 3600
+
+# Add a dedicated user for running arkmanager
+- name: Add ark user account
+  user:
+    name: ark
+    shell: /bin/bash
+    generate_ssh_key: yes
+    ssh_key_bits: 2048
+    ssh_key_file: .ssh/id_rsa
+    state: present
+
+# Add sudo rights for the ark user
+- name: Add sudo rights for the ark user
+  lineinfile:
+    dest: /etc/sudoers
+    regexp: '^ark'
+    line: 'ark ALL=(ALL) NOPASSWD: ALL'
+    state: present
+    validate: 'visudo -cf %s'
+
+# Stop the ufw firewall on host.
+- name: Ensure ufw is removed.
+  apt:
+    name: ufw
+    state: absent

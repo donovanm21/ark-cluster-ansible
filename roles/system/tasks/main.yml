@@ -1,0 +1,54 @@
+---
+# Copy mod checker to the host
+- name: Copy the mod checker script to the host
+  copy:
+    src: scripts/ark_mod_checker.sh
+    dest: /home/ark/ark_mod_checker.sh
+    owner: ark
+    mode: '0755'
+
+# Copy update checker to the host
+- name: Copy the update checker script to the host
+  copy:
+    src: scripts/ark_update_checker.sh
+    dest: /home/ark/ark_update_checker.sh
+    owner: ark
+    mode: '0755'
+
+# Copy the RCON command script (used by cron for wild dino wipes)
+- name: Copy the ark rcon command script to the host
+  copy:
+    src: scripts/ark_rcon_cmd.sh
+    dest: /home/ark/ark_rcon_cmd.sh
+    owner: ark
+    mode: '0755'
+
+# Render the system update script (iterates over configured maps)
+- name: Render the system update script
+  template:
+    src: ark_system_update.sh.j2
+    dest: /home/ark/ark_system_update.sh
+    owner: ark
+    mode: '0755'
+
+# Render the system startup script (iterates over configured maps)
+- name: Render the system startup script
+  template:
+    src: ark_map_start.sh.j2
+    dest: /home/ark/ark_map_start.sh
+    owner: ark
+    mode: '0755'
+
+# Render the crontab from configured maps/schedule
+- name: Render the crontab file
+  template:
+    src: crontab.txt.j2
+    dest: /home/ark/crontab.txt
+    owner: ark
+    mode: '0644'
+  register: crontab_rendered
+
+# Import the crontab only when it changed (overwrites the ark user's crontab)
+- name: Import the crontab file
+  command: crontab -u ark /home/ark/crontab.txt
+  when: crontab_rendered.changed

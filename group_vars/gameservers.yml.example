@@ -1,0 +1,153 @@
+---
+# Copy this file to group_vars/gameservers.yml and edit for your deployment.
+# The real gameservers.yml is gitignored so your config never leaks to the repo.
+
+# Server identity — shows up in Steam browser and Discord notifications
+location: "XX"          # two-letter region code, e.g. "US", "EU", "ZA"
+server_tag: "MyCluster" # short tag shown in SessionName
+server_mode: "PvE"      # "PvE" or "PvP"
+
+# Optional: Discord webhook for server up/down/restart notifications.
+# Leave unset to disable.
+# discord_webhook_url: "https://discord.com/api/webhooks/XXXXX/YYYYY"
+
+# Optional: external banlist URL pulled by ARK on startup.
+# banlist_url: "https://example.com/banlist.txt"
+
+# Optional gameplay tuning — all have sensible defaults in the templates.
+# Uncomment and set to override.
+# taming_speed_multiplier: 4.5
+# harvest_amount_multiplier: 2
+# harvest_health_multiplier: 2
+# xp_multiplier: 1
+# max_tamed_dinos: 10000
+# override_official_difficulty: 5
+# player_damage_multiplier: 1.0
+# pve_dino_decay_period_multiplier: 5
+# pve_structure_decay_period_multiplier: 2.5
+# resources_respawn_period_multiplier: 0.75
+
+# Message of the day shown on player join
+# motd_duration: 15
+# motd_message: "Welcome to my server!"
+
+# Maps to run. Each entry creates one arkmanager instance.
+# RCON/ARK/Steam ports must be unique per map.
+# map_mods_enabled is a comma-separated list of Steam Workshop mod IDs.
+# cluster_name groups maps that share tames/players via cross-map transfer.
+maps:
+  - map_name_ark: "Ragnarok"
+    map_name: "Ragnarok"
+    map_rcon_port: 32332
+    map_ark_port: 7779
+    map_steam_port: 27017
+    map_admin_password: "CHANGE_ME"
+    map_max_players: 25
+    map_mods_enabled: ""
+    cluster_name: "MyCluster"
+  # - map_name_ark: "TheIsland"
+  #   map_name: "TheIsland"
+  #   map_rcon_port: 32344
+  #   map_ark_port: 7791
+  #   map_steam_port: 27029
+  #   map_admin_password: "CHANGE_ME"
+  #   map_max_players: 25
+  #   map_mods_enabled: ""
+  #   cluster_name: "MyCluster"
+  # - map_name_ark: "ScorchedEarth_P"
+  #   map_name: "ScorchedEarth"
+  #   map_rcon_port: 32330
+  #   map_ark_port: 7777
+  #   map_steam_port: 27015
+  #   map_admin_password: "CHANGE_ME"
+  #   map_max_players: 25
+  #   map_mods_enabled: ""
+  #   cluster_name: "MyCluster"
+  # - map_name_ark: "Aberration_P"
+  #   map_name: "Aberration"
+  #   map_rcon_port: 32334
+  #   map_ark_port: 7781
+  #   map_steam_port: 27019
+  #   map_admin_password: "CHANGE_ME"
+  #   map_max_players: 25
+  #   map_mods_enabled: ""
+  #   cluster_name: "MyCluster"
+  # - map_name_ark: "Extinction"
+  #   map_name: "Extinction"
+  #   map_rcon_port: 32338
+  #   map_ark_port: 7785
+  #   map_steam_port: 27023
+  #   map_admin_password: "CHANGE_ME"
+  #   map_max_players: 25
+  #   map_mods_enabled: ""
+  #   cluster_name: "MyCluster"
+  # - map_name_ark: "Valguero_P"
+  #   map_name: "Valguero"
+  #   map_rcon_port: 32342
+  #   map_ark_port: 7789
+  #   map_steam_port: 27027
+  #   map_admin_password: "CHANGE_ME"
+  #   map_max_players: 25
+  #   map_mods_enabled: ""
+  #   cluster_name: "MyCluster"
+  # - map_name_ark: "TheCenter"
+  #   map_name: "TheCenter"
+  #   map_rcon_port: 32346
+  #   map_ark_port: 7793
+  #   map_steam_port: 27031
+  #   map_admin_password: "CHANGE_ME"
+  #   map_max_players: 25
+  #   map_mods_enabled: ""
+  #   cluster_name: "MyCluster"
+  # - map_name_ark: "CrystalIsles"
+  #   map_name: "CrystalIsles"
+  #   map_rcon_port: 32340
+  #   map_ark_port: 7787
+  #   map_steam_port: 27025
+  #   map_admin_password: "CHANGE_ME"
+  #   map_max_players: 25
+  #   map_mods_enabled: ""
+  #   cluster_name: "MyCluster"
+  # - map_name_ark: "Fjordur"
+  #   map_name: "Fjordur"
+  #   map_rcon_port: 32352
+  #   map_ark_port: 7799
+  #   map_steam_port: 27037
+  #   map_admin_password: "CHANGE_ME"
+  #   map_max_players: 25
+  #   map_mods_enabled: ""
+  #   cluster_name: "MyCluster"
+  # - map_name_ark: "Gen2"
+  #   map_name: "Genesis2"
+  #   map_rcon_port: 32348
+  #   map_ark_port: 7795
+  #   map_steam_port: 27033
+  #   map_admin_password: "CHANGE_ME"
+  #   map_max_players: 25
+  #   map_mods_enabled: ""
+  #   cluster_name: "MyCluster"
+  # - map_name_ark: "Genesis"
+  #   map_name: "Genesis"
+  #   map_rcon_port: 32336
+  #   map_ark_port: 7783
+  #   map_steam_port: 27021
+  #   map_admin_password: "CHANGE_ME"
+  #   map_max_players: 25
+  #   map_mods_enabled: ""
+  #   cluster_name: "MyCluster"
+  # - map_name_ark: "LostIsland"
+  #   map_name: "LostIsland"
+  #   map_rcon_port: 32350
+  #   map_ark_port: 7797
+  #   map_steam_port: 27035
+  #   map_admin_password: "CHANGE_ME"
+  #   map_max_players: 25
+  #   map_mods_enabled: ""
+  #   cluster_name: "MyCluster"
+
+# SteamIDs of players granted in-game admin (cheat commands).
+# Get a SteamID from https://steamid.io — paste the 17-digit number.
+admins: []
+# admins:
+#   - 76561190000000001
+#   - 76561190000000002

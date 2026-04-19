@@ -1,0 +1,56 @@
+# config environment
+arkserverroot="{{ ark_server_root | default('/home/ark/ARK') }}"
+
+# ARK server options - use ark_<optionname>=<value>
+# comment out these values if you want to define them
+# inside your GameUserSettings.ini file
+serverMap={{ item.map_name_ark }}
+ark_RCONEnabled="True"
+ark_RCONPort="{{ item.map_rcon_port }}"
+ark_SessionName="{{ location }} {{ server_tag }} {{ item.map_name }} {{ server_mode }}"
+ark_Port="{{ item.map_ark_port }}"
+ark_QueryPort="{{ item.map_steam_port }}"
+ark_ServerPassword="{{ item.map_server_password | default('') }}"
+ark_ServerAdminPassword="{{ item.map_admin_password }}"
+ark_MaxPlayers="{{ item.map_max_players }}"
+ark_ServerPVE={{ 'True' if server_mode == 'PvE' else 'False' }}
+ark_AllowAnyoneBabyImprintCuddle=True
+ark_UseVivox=True
+
+# Mods
+ark_GameModIds="{{ item.map_mods_enabled }}"
+ark_AltSaveDirectoryName="{{ server_mode }}_{{ item.map_name }}"
+
+# ARK server flags - use arkflag_<optionname>=true
+#arkflag_OnlyAdminRejoinAsSpectator=true
+#arkflag_DisableDeathSpectator=true
+ark_MultiHome={{ ark_MultiHome }}
+arkflag_NoTransferFromFiltering=true
+arkflag_webalarm=true
+arkflag_crossplay=true
+arkflag_UseDynamicConfig=true
+#arkflag_lowmemory=true
+
+# ARK server options - i.e. for -optname=val, use arkopt_optname=val
+arkopt_clusterid={{ item.cluster_name }}
+#arkopt_ActiveEvent=Summer
+#arkopt_ActiveEvent=ExtinctionChronicles
+#arkopt_ActiveEvent=FearEvolved
+#arkopt_ActiveEvent=TurkeyTrial
+#arkopt_ActiveEvent=WinterWonderland
+#arkopt_ActiveEvent=vday
+
+arkGameIniFile="/etc/arkmanager/files/Game.ini"
+arkGameUserSettingsIniFile="/etc/arkmanager/files/{{ item.map_name }}/GameUserSettings.ini"
+
+# Notifications
+{% if discord_webhook_url is defined and discord_webhook_url %}
+discordWebhookURL="{{ discord_webhook_url }}"
+{% endif %}
+notifyMsgShuttingDown="Shutting down"
+notifyMsgStarting="Starting"
+notifyMsgServerUp="Server is up"
+notifyMsgStoppedListening="Server has stopped listening - restarting"
+notifyMsgServerTerminated="Server exited - restarting"
+notifyTemplate="Instance {instance} on server {server}: {msg}"
+noNotifyWarning=false

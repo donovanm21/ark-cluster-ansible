@@ -1,0 +1,18 @@
+# Inventory for the ARK cluster host.
+#
+# The default assumes you're running ansible-playbook ON the target server
+# itself (main.yml uses connection: local). For remote execution, replace
+# `localhost` with the server's hostname/IP and adjust ansible_user as needed.
+#
+# Copy this file to `inventory_remote` and edit. The real inventory is
+# gitignored so per-deployment connection details stay out of the repo.
+
+[gameservers]
+localhost
+
+[gameservers:vars]
+# When running locally on the target host as root, ansible_user can be omitted.
+# For remote, non-root execution, uncomment and set:
+# ansible_user=ubuntu
+# ansible_become=true
+ansible_user=root

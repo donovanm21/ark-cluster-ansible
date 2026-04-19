@@ -1,0 +1,8 @@
+---
+- hosts: gameservers
+  connection: local
+  become: yes
+
+  roles:
+    - { role: system, tags: "system"}
+    - { role: maps, tags: "maps"}
