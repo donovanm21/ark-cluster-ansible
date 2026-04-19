@@ -1,8 +1,14 @@
 ---
-- hosts: gameservers
+# Top-level play: run in order on the target host.
+# Roles are listed explicitly (not via meta/main.yml dependencies) so the
+# execution order is visible and each role stays independently runnable.
+- name: Deploy ARK cluster
+  hosts: gameservers
   connection: local
-  become: yes
+  become: true
 
   roles:
-    - { role: system, tags: "system"}
-    - { role: maps, tags: "maps"}
+    - { role: provision,  tags: ["provision", "bootstrap"] }
+    - { role: arkmanager, tags: ["arkmanager", "bootstrap"] }
+    - { role: maps,       tags: ["maps", "config"] }
+    - { role: system,     tags: ["system", "config"] }

@@ -1,2 +1,13 @@
 ---
-# defaults file for provision
+# Defaults for the provision role.
+# ark_user / ark_home / ark_server_root are project-wide and live in
+# group_vars/all.yml — override those, not these.
+
+# Drop a NOPASSWD sudo rule for the ark user into /etc/sudoers.d/<ark_user>.
+# Disable if your site has its own sudoers management.
+manage_sudoers: true
+
+# Remove UFW. Retained for backwards compatibility with the original
+# playbook; consider disabling and adding explicit UFW rules for the
+# ARK ports instead.
+manage_firewall: true

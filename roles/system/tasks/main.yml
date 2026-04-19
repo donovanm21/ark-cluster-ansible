@@ -1,71 +1,66 @@
 ---
-# Copy mod checker to the host
-- name: Copy the mod checker script to the host
-  copy:
-    src: scripts/ark_mod_checker.sh
-    dest: /home/ark/ark_mod_checker.sh
-    owner: ark
+# Convert the two shell scripts that reference other paths into templates so
+# they resolve {{ ark_home }} when deployed. (ark_rcon_cmd.sh is copied as-is
+# because it has no path-level references.)
+
+- name: Render the mod checker script
+  template:
+    src: ark_mod_checker.sh.j2
+    dest: "{{ ark_home }}/ark_mod_checker.sh"
+    owner: "{{ ark_user }}"
     mode: '0755'
 
-# Copy update checker to the host
-- name: Copy the update checker script to the host
-  copy:
-    src: scripts/ark_update_checker.sh
-    dest: /home/ark/ark_update_checker.sh
-    owner: ark
+- name: Render the update checker script
+  template:
+    src: ark_update_checker.sh.j2
+    dest: "{{ ark_home }}/ark_update_checker.sh"
+    owner: "{{ ark_user }}"
     mode: '0755'
 
-# Copy the RCON command script (used by cron for wild dino wipes)
-- name: Copy the ark rcon command script to the host
+- name: Copy the ark rcon command script (used by cron for wild dino wipes)
   copy:
     src: scripts/ark_rcon_cmd.sh
-    dest: /home/ark/ark_rcon_cmd.sh
-    owner: ark
+    dest: "{{ ark_home }}/ark_rcon_cmd.sh"
+    owner: "{{ ark_user }}"
     mode: '0755'
 
-# Render the system update script (iterates over configured maps)
 - name: Render the system update script
   template:
     src: ark_system_update.sh.j2
-    dest: /home/ark/ark_system_update.sh
-    owner: ark
+    dest: "{{ ark_home }}/ark_system_update.sh"
+    owner: "{{ ark_user }}"
     mode: '0755'
 
-# Render the system startup script (iterates over configured maps)
 - name: Render the system startup script
   template:
     src: ark_map_start.sh.j2
-    dest: /home/ark/ark_map_start.sh
-    owner: ark
+    dest: "{{ ark_home }}/ark_map_start.sh"
+    owner: "{{ ark_user }}"
     mode: '0755'
 
-# Render the crash-recovery watchdog script
-- name: Render the watchdog script
+- name: Render the crash-recovery watchdog script
   template:
     src: ark_watchdog.sh.j2
-    dest: /home/ark/ark_watchdog.sh
-    owner: ark
+    dest: "{{ ark_home }}/ark_watchdog.sh"
+    owner: "{{ ark_user }}"
     mode: '0755'
 
-# Install logrotate config for arkmanager + ShooterGameServer logs
-- name: Install logrotate config for arkmanager logs
-  copy:
-    src: logrotate_arkmanager
+- name: Render the logrotate config for arkmanager logs
+  template:
+    src: logrotate_arkmanager.j2
     dest: /etc/logrotate.d/arkmanager
     owner: root
     group: root
     mode: '0644'
 
-# Render the crontab from configured maps/schedule
 - name: Render the crontab file
   template:
     src: crontab.txt.j2
-    dest: /home/ark/crontab.txt
-    owner: ark
+    dest: "{{ ark_home }}/crontab.txt"
+    owner: "{{ ark_user }}"
     mode: '0644'
   register: crontab_rendered
 
-# Import the crontab only when it changed (overwrites the ark user's crontab)
-- name: Import the crontab file
-  command: crontab -u ark /home/ark/crontab.txt
+- name: Import the crontab when it changed
+  command: "crontab -u {{ ark_user }} {{ ark_home }}/crontab.txt"
   when: crontab_rendered.changed

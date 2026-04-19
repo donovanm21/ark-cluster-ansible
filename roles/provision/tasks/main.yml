@@ -1,6 +1,5 @@
 ---
-# Install needed tools
-- name: Update the apt cache and install tools
+- name: Install base OS dependencies
   apt:
     name:
       - htop
@@ -12,30 +11,36 @@
       - lib32gcc-s1
       - bzip2
     state: present
-    #update_cache: yes
-    #cache_valid_time: 3600
+    update_cache: true
+    cache_valid_time: 3600
 
-# Add a dedicated user for running arkmanager
-- name: Add ark user account
+- name: Create the ark server user account
   user:
-    name: ark
+    name: "{{ ark_user }}"
+    home: "{{ ark_home }}"
     shell: /bin/bash
-    generate_ssh_key: yes
+    generate_ssh_key: true
     ssh_key_bits: 2048
     ssh_key_file: .ssh/id_rsa
     state: present
 
-# Add sudo rights for the ark user
-- name: Add sudo rights for the ark user
-  lineinfile:
-    dest: /etc/sudoers
-    regexp: '^ark'
-    line: 'ark ALL=(ALL) NOPASSWD: ALL'
-    state: present
+# NOPASSWD sudo is a convenience for arkmanager commands; scope it to a
+# drop-in rather than editing /etc/sudoers in place so it's easy to audit
+# and revert. Disable via `manage_sudoers: false` in group_vars.
+- name: Grant passwordless sudo to the ark user
+  copy:
+    dest: "/etc/sudoers.d/{{ ark_user }}"
+    content: "{{ ark_user }} ALL=(ALL) NOPASSWD: ALL\n"
+    mode: '0440'
     validate: 'visudo -cf %s'
+  when: manage_sudoers | default(true)
 
-# Stop the ufw firewall on host.
-- name: Ensure ufw is removed.
+# UFW removal is opt-in so we don't silently disable a user's firewall.
+# Keep default true to preserve prior behaviour; set `manage_firewall: false`
+# to skip. A future enhancement could add explicit UFW rules for the ARK
+# ports instead of removing the package.
+- name: Ensure ufw is removed
   apt:
     name: ufw
     state: absent
+  when: manage_firewall | default(true)

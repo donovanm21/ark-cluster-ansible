@@ -1,4 +1,4 @@
-/home/ark/ARK/ShooterGame/Saved/Logs/*.log {
+{{ ark_server_root }}/ShooterGame/Saved/Logs/*.log {
     daily
     rotate 14
     compress
@@ -6,8 +6,8 @@
     missingok
     notifempty
     copytruncate
-    su ark ark
-    create 0644 ark ark
+    su {{ ark_user }} {{ ark_user }}
+    create 0644 {{ ark_user }} {{ ark_user }}
 }
 
 /var/log/arkmanager/*.log

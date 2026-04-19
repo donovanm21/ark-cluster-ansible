@@ -1,5 +1,15 @@
 ---
-dependencies:
-  - role: provision
-  - role: arkmanager
-  - role: maps
+galaxy_info:
+  role_name: system
+  author: ark-cluster-ansible contributors
+  description: Lifecycle automation — daily restart/update, backups, watchdog, crontab, logrotate.
+  license: MIT
+  min_ansible_version: "2.10"
+  platforms:
+    - name: Ubuntu
+      versions: [focal, jammy, noble]
+    - name: Debian
+      versions: [bullseye, bookworm]
+  galaxy_tags: [ark, gaming, arkmanager, automation]
+
+dependencies: []

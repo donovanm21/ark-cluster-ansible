@@ -1,4 +1,15 @@
 ---
-dependencies:
-  - role: provision
-  - role: arkmanager
+galaxy_info:
+  role_name: maps
+  author: ark-cluster-ansible contributors
+  description: Per-map arkmanager instance configs, GameUserSettings.ini, Game.ini, mods.
+  license: MIT
+  min_ansible_version: "2.10"
+  platforms:
+    - name: Ubuntu
+      versions: [focal, jammy, noble]
+    - name: Debian
+      versions: [bullseye, bookworm]
+  galaxy_tags: [ark, gaming, arkmanager, cluster]
+
+dependencies: []

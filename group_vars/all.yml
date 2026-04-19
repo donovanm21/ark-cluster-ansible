@@ -1,0 +1,17 @@
+---
+# Project-wide defaults. These apply to every host in the inventory and
+# are the lowest-precedence source of truth for user/path identity.
+# Override in group_vars/gameservers.yml if you need a different layout.
+
+# System user the ark server runs as.
+ark_user: ark
+
+# Home directory for the ark user. Must be writable by that user.
+ark_home: "/home/{{ ark_user }}"
+
+# ARK: Survival Evolved server install directory. SteamCMD pulls the
+# game files here; arkmanager drives lifecycle from this path.
+ark_server_root: "{{ ark_home }}/ARK"
+
+# arkmanager configuration directory (instance configs + Game.ini).
+arkmanager_config_dir: /etc/arkmanager

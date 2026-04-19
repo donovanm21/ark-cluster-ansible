@@ -1,5 +1,5 @@
 # config environment
-arkserverroot="{{ ark_server_root | default('/home/ark/ARK') }}"
+arkserverroot="{{ ark_server_root }}"
 
 # ARK server options - use ark_<optionname>=<value>
 # comment out these values if you want to define them
@@ -40,8 +40,8 @@ arkopt_clusterid={{ item.cluster_name }}
 #arkopt_ActiveEvent=WinterWonderland
 #arkopt_ActiveEvent=vday
 
-arkGameIniFile="/etc/arkmanager/files/Game.ini"
-arkGameUserSettingsIniFile="/etc/arkmanager/files/{{ item.map_name }}/GameUserSettings.ini"
+arkGameIniFile="{{ arkmanager_config_dir }}/files/Game.ini"
+arkGameUserSettingsIniFile="{{ arkmanager_config_dir }}/files/{{ item.map_name }}/GameUserSettings.ini"
 
 # Notifications
 {% if discord_webhook_url is defined and discord_webhook_url %}

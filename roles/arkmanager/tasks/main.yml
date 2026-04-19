@@ -1,31 +1,31 @@
 ---
-# Download arkmanager init script
-- name: Download arkmanager from git repo
-  get_url:
-    url: https://raw.githubusercontent.com/arkmanager/ark-server-tools/master/netinstall.sh
-    dest: /tmp/install.sh
-    mode: 0777
-
-# Check if arkmanager cmd is installed
 - name: Check if arkmanager is installed
   command: which arkmanager
   register: arkmanager_installed
   changed_when: false
-  ignore_errors: yes
+  failed_when: false
 
-# Check arkmanager version
-- name: Check arkmanager version and status
+- name: Download the arkmanager netinstall script
+  get_url:
+    url: "{{ arkmanager_installer_url }}"
+    dest: /tmp/arkmanager-netinstall.sh
+    mode: '0755'
+  when: arkmanager_installed.stdout == ''
+
+- name: Run the arkmanager netinstall
+  shell: "bash /tmp/arkmanager-netinstall.sh {{ ark_user }}"
+  when: arkmanager_installed.stdout == ''
+
+- name: Confirm arkmanager version
   command: arkmanager --version
   register: arkmanager_version
   changed_when: false
-  ignore_errors: yes
+  failed_when: false
 
-# Install arkmanager cmd
-- name: Run the arkmanager install script
-  shell: cat /tmp/install.sh | sudo bash -s ark
-  when: "arkmanager_installed.stdout == ''"
-
-# Run the arkmanager installer
-- name: Run arkmanager installer
+- name: Run 'arkmanager install' if steam/base tree is missing
   command: arkmanager install
-  when: "arkmanager_version.stderr.find('ERROR') != -1"
+  become: true
+  become_user: "{{ ark_user }}"
+  when:
+    - arkmanager_version.stderr is defined
+    - "'ERROR' in arkmanager_version.stderr"
