@@ -1,11 +1,13 @@
-# ark-cluster-ansible
+<p align="center">
+  <img src="docs/assets/header.svg" alt="ark-cluster-ansible — deploy a production-ready ARK: Survival Evolved cluster" width="100%"/>
+</p>
 
-> Deploy a production-ready **ARK: Survival Evolved** cluster on a single Linux host with one command. PvE or PvP, any combination of maps, fully automated lifecycle.
-
-[![License: MIT](https://img.shields.io/badge/license-MIT-yellow.svg)](LICENSE)
-[![Ansible](https://img.shields.io/badge/Ansible-2.10%2B-red.svg)](https://docs.ansible.com/)
-[![Platform](https://img.shields.io/badge/platform-Ubuntu%20%7C%20Debian-orange.svg)](#prerequisites)
-[![Powered by arkmanager](https://img.shields.io/badge/powered%20by-arkmanager-blueviolet.svg)](https://github.com/arkmanager/ark-server-tools)
+<p align="center">
+  <a href="LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/license-MIT-yellow.svg"/></a>
+  <a href="https://docs.ansible.com/"><img alt="Ansible 2.10+" src="https://img.shields.io/badge/Ansible-2.10%2B-red.svg"/></a>
+  <a href="#prerequisites"><img alt="Platform: Ubuntu | Debian" src="https://img.shields.io/badge/platform-Ubuntu%20%7C%20Debian-orange.svg"/></a>
+  <a href="https://github.com/arkmanager/ark-server-tools"><img alt="Powered by arkmanager" src="https://img.shields.io/badge/powered%20by-arkmanager-blueviolet.svg"/></a>
+</p>
 
 ---
 

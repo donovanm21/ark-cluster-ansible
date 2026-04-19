@@ -1,0 +1,52 @@
+<svg viewBox="0 0 1200 280" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="ark-cluster-ansible">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0b1220"/>
+      <stop offset="1" stop-color="#1e293b"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#f97316"/>
+      <stop offset="1" stop-color="#fbbf24"/>
+    </linearGradient>
+    <radialGradient id="node" cx="0.3" cy="0.3" r="0.9">
+      <stop offset="0" stop-color="#4ade80"/>
+      <stop offset="1" stop-color="#166534"/>
+    </radialGradient>
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <rect width="1200" height="280" fill="url(#bg)"/>
+
+  <!-- subtle grid to hint at infrastructure -->
+  <g stroke="#1e293b" stroke-width="1" opacity="0.6">
+    <line x1="0" y1="70"  x2="1200" y2="70"/>
+    <line x1="0" y1="140" x2="1200" y2="140"/>
+    <line x1="0" y1="210" x2="1200" y2="210"/>
+  </g>
+
+  <!-- thin sunset horizon line -->
+  <line x1="0" y1="278" x2="1200" y2="278" stroke="url(#accent)" stroke-width="2" opacity="0.5"/>
+
+  <!-- cluster motif: triangle of 3 nodes connected by accent lines -->
+  <g transform="translate(150, 140)" filter="url(#glow)">
+    <line x1="-55" y1="45"  x2="55"  y2="45"  stroke="url(#accent)" stroke-width="2.5" opacity="0.8"/>
+    <line x1="-55" y1="45"  x2="0"   y2="-55" stroke="url(#accent)" stroke-width="2.5" opacity="0.8"/>
+    <line x1="55"  y1="45"  x2="0"   y2="-55" stroke="url(#accent)" stroke-width="2.5" opacity="0.8"/>
+    <circle cx="0"   cy="-55" r="24" fill="url(#node)" stroke="#4ade80" stroke-width="2"/>
+    <circle cx="-55" cy="45"  r="24" fill="url(#node)" stroke="#4ade80" stroke-width="2"/>
+    <circle cx="55"  cy="45"  r="24" fill="url(#node)" stroke="#4ade80" stroke-width="2"/>
+  </g>
+
+  <!-- type -->
+  <g font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+    <text x="300" y="128" font-size="62" font-weight="800" fill="#f1f5f9" letter-spacing="-1.5">ark-cluster-ansible</text>
+    <text x="302" y="172" font-size="22" font-weight="400" fill="#cbd5e1" letter-spacing="0.2">Deploy a production-ready ARK: Survival Evolved cluster.</text>
+    <text x="302" y="204" font-size="17" font-weight="400" fill="#94a3b8" letter-spacing="0.3">One host  ·  One command  ·  PvE or PvP  ·  Fully automated lifecycle</text>
+  </g>
+</svg>
