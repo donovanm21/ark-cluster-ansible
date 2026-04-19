@@ -56,9 +56,9 @@ fi
 
 RULE="============================================================================"
 
-hr()      { printf '%s\n' "$RULE"; }
-title()   { echo; printf '%s%s%s\n' "$BOLD" "$1" "$RESET"; hr; }
-section() { echo; printf '%s--- %s ---%s\n' "$BOLD" "$1" "$RESET"; }
+hr()      { printf '%s%s%s\n' "$DIM" "$RULE" "$RESET"; }
+title()   { echo; printf '%s%s%s\n' "$BOLD$CYAN" "$1" "$RESET"; hr; }
+section() { echo; printf '%s>> %s%s\n' "$BOLD$BLUE" "$1" "$RESET"; }
 ok()      { printf '  %s[ok]%s   %s\n' "$GREEN" "$RESET" "$1"; }
 info()    { printf '  %s[..]%s   %s\n' "$CYAN" "$RESET" "$1"; }
 warn()    { printf '  %s[!!]%s   %s\n' "$YELLOW" "$RESET" "$1"; }
@@ -66,25 +66,37 @@ fail()    { printf '  %s[x]%s    %s\n' "$RED" "$RESET" "$1" >&2; }
 die()     { fail "$1"; exit 1; }
 
 # --- prompts ------------------------------------------------------------------
+# Prompt styling: cyan "?" marker, bold question, dim default in brackets,
+# yellow cursor ">". Every interactive prompt flows through these helpers so
+# the colour is consistent.
+
 # ask VAR "Prompt text" ["default"]
 ask() {
-    local __var=$1 __prompt=$2 __default=${3:-} __input=""
+    local __var=$1 __prompt=$2 __default=${3:-} __input="" __p
     if [[ -n "$__default" ]]; then
-        read -r -p "  $__prompt [$__default]: " __input || true
+        __p=$(printf '  %s?%s %s %s[%s]%s %s>%s ' \
+            "$CYAN" "$RESET" "$__prompt" \
+            "$DIM" "$__default" "$RESET" \
+            "$YELLOW" "$RESET")
+        read -r -p "$__p" __input || true
         __input=${__input:-$__default}
     else
-        read -r -p "  $__prompt: " __input || true
+        __p=$(printf '  %s?%s %s %s>%s ' \
+            "$CYAN" "$RESET" "$__prompt" "$YELLOW" "$RESET")
+        read -r -p "$__p" __input || true
     fi
     printf -v "$__var" '%s' "$__input"
 }
 
 # ask_password VAR "Prompt"
 ask_password() {
-    local __var=$1 __prompt=$2 __p1="" __p2=""
+    local __var=$1 __prompt=$2 __p1="" __p2="" __p
+    __p=$(printf '  %s?%s %s %s>%s ' \
+        "$CYAN" "$RESET" "$__prompt" "$YELLOW" "$RESET")
     while true; do
-        read -r -s -p "  $__prompt: " __p1 || true; echo
+        read -r -s -p "$__p" __p1 || true; echo
         if [[ -z "$__p1" ]]; then warn "Password cannot be empty."; continue; fi
-        read -r -s -p "  Repeat: " __p2 || true; echo
+        read -r -s -p "$(printf '  %s?%s Repeat %s>%s ' "$CYAN" "$RESET" "$YELLOW" "$RESET")" __p2 || true; echo
         if [[ "$__p1" != "$__p2" ]]; then warn "Passwords do not match."; continue; fi
         printf -v "$__var" '%s' "$__p1"
         return 0
@@ -93,15 +105,23 @@ ask_password() {
 
 # ask_yn "Prompt" ["Y"|"N"]  — returns 0 for yes, 1 for no
 ask_yn() {
-    local prompt=$1 default=${2:-N} suffix="" choice=""
-    if [[ "$default" == "Y" ]]; then suffix="[Y/n]"; else suffix="[y/N]"; fi
-    read -r -p "  $prompt $suffix " choice || true
+    local prompt=$1 default=${2:-N} suffix="" choice="" p
+    if [[ "$default" == "Y" ]]; then
+        suffix=$(printf '%s[%sY%s/n]%s' "$DIM" "$BOLD$GREEN" "$RESET$DIM" "$RESET")
+    else
+        suffix=$(printf '%s[y/%sN%s]%s' "$DIM" "$BOLD$RED" "$RESET$DIM" "$RESET")
+    fi
+    p=$(printf '  %s?%s %s %s %s>%s ' \
+        "$CYAN" "$RESET" "$prompt" "$suffix" "$YELLOW" "$RESET")
+    read -r -p "$p" choice || true
     choice=${choice:-$default}
     case "${choice,,}" in y|yes) return 0 ;; *) return 1 ;; esac
 }
 
 press_enter() {
-    read -r -p "  Press Enter to continue... " _ || true
+    local p
+    p=$(printf '  %s>>%s Press Enter to continue... ' "$DIM" "$RESET")
+    read -r -p "$p" _ || true
 }
 
 # --- prerequisites ------------------------------------------------------------
@@ -189,17 +209,19 @@ wizard_identity() {
 
 wizard_maps() {
     section "Map selection"
-    echo "  Available maps (ports shown as game / query / RCON):"
-    echo
+    printf "  Available maps %s(ports shown as game / query / RCON)%s:\n\n" "$DIM" "$RESET"
     local i=1 entry ark_name display rcon_p ark_p steam_p
     for entry in "${MAP_CATALOG[@]}"; do
         IFS='|' read -r ark_name display rcon_p ark_p steam_p _ <<<"$entry"
-        printf "   %s%2d)%s  %-18s  %5s / %5s / %5s\n" \
-            "$BOLD" "$i" "$RESET" "$display" "$ark_p" "$steam_p" "$rcon_p"
+        printf "   %s%2d)%s  %s%-18s%s  %s%5s / %5s / %5s%s\n" \
+            "$BOLD$CYAN" "$i" "$RESET" \
+            "$BOLD" "$display" "$RESET" \
+            "$DIM" "$ark_p" "$steam_p" "$rcon_p" "$RESET"
         i=$((i+1))
     done
     echo
-    echo "  Enter map numbers separated by spaces (e.g. '1 2 3'), or 'all'."
+    printf "  Enter map numbers separated by spaces (e.g. %s'1 2 3'%s), or %s'all'%s.\n" \
+        "$YELLOW" "$RESET" "$YELLOW" "$RESET"
 
     while true; do
         local input=""
@@ -301,14 +323,22 @@ wizard_admins() {
 
 confirm_config() {
     section "Review"
-    printf "  Region:   %s\n"    "$WIZ_LOC"
-    printf "  Tag:      %s\n"    "$WIZ_TAG"
-    printf "  Mode:     %s\n"    "$WIZ_MODE"
-    printf "  Cluster:  %s\n"    "$WIZ_CLUSTER"
-    printf "  Maps:     %s\n"    "${WIZ_MAPS[*]}"
-    printf "  Admins:   %s\n"    "${WIZ_ADMINS:-(none)}"
-    printf "  Discord:  %s\n"    "${WIZ_DISCORD:+enabled}"
-    [[ -z "$WIZ_DISCORD" ]] && printf "  Discord:  disabled\n"
+    local lbl="$DIM" val="$BOLD$YELLOW" rst="$RESET"
+    printf "  %sRegion:%s   %s%s%s\n"  "$lbl" "$rst" "$val" "$WIZ_LOC"     "$rst"
+    printf "  %sTag:%s      %s%s%s\n"  "$lbl" "$rst" "$val" "$WIZ_TAG"     "$rst"
+    printf "  %sMode:%s     %s%s%s\n"  "$lbl" "$rst" "$val" "$WIZ_MODE"    "$rst"
+    printf "  %sCluster:%s  %s%s%s\n"  "$lbl" "$rst" "$val" "$WIZ_CLUSTER" "$rst"
+    printf "  %sMaps:%s     %s%s%s\n"  "$lbl" "$rst" "$val" "${WIZ_MAPS[*]}" "$rst"
+    if [[ -n "$WIZ_ADMINS" ]]; then
+        printf "  %sAdmins:%s   %s%s%s\n" "$lbl" "$rst" "$val" "$WIZ_ADMINS" "$rst"
+    else
+        printf "  %sAdmins:%s   %s(none)%s\n" "$lbl" "$rst" "$DIM" "$rst"
+    fi
+    if [[ -n "$WIZ_DISCORD" ]]; then
+        printf "  %sDiscord:%s  %senabled%s\n" "$lbl" "$rst" "$GREEN" "$rst"
+    else
+        printf "  %sDiscord:%s  %sdisabled%s\n" "$lbl" "$rst" "$DIM" "$rst"
+    fi
     echo
     ask_yn "Write config and run the playbook?" Y
 }
@@ -524,22 +554,30 @@ DWARN
 main_menu() {
     clear 2>/dev/null || echo
     hr
-    printf '%s  ark-cluster-ansible%s  —  interactive deploy\n' "$BOLD" "$RESET"
+    printf '  %sark-cluster-ansible%s  %s—  interactive deploy%s\n' \
+        "$BOLD$CYAN" "$RESET" "$DIM" "$RESET"
     hr
-    printf '  %s\n' "$(host_capacity_line)"
+    printf '  %s%s%s\n' "$DIM" "$(host_capacity_line)" "$RESET"
     echo
-    cat <<'MENU'
-    1)  Deploy       — run the wizard, write config, deploy the cluster
-    2)  Redeploy     — re-run the playbook with the existing config
-    3)  Dry-run      — show what would change without applying
-    4)  Status       — arkmanager status @all
-    5)  Edit config  — open gameservers.yml in $EDITOR
-    6)  Destroy      — stop everything and remove arkmanager state
-    7)  Exit
-MENU
+    printf '    %s1)%s  %sDeploy%s       %s— run the wizard, write config, deploy the cluster%s\n' \
+        "$BOLD$CYAN" "$RESET" "$BOLD" "$RESET" "$DIM" "$RESET"
+    printf '    %s2)%s  %sRedeploy%s     %s— re-run the playbook with the existing config%s\n' \
+        "$BOLD$CYAN" "$RESET" "$BOLD" "$RESET" "$DIM" "$RESET"
+    printf '    %s3)%s  %sDry-run%s      %s— show what would change without applying%s\n' \
+        "$BOLD$CYAN" "$RESET" "$BOLD" "$RESET" "$DIM" "$RESET"
+    printf '    %s4)%s  %sStatus%s       %s— arkmanager status @all%s\n' \
+        "$BOLD$CYAN" "$RESET" "$BOLD" "$RESET" "$DIM" "$RESET"
+    printf '    %s5)%s  %sEdit config%s  %s— open gameservers.yml in $EDITOR%s\n' \
+        "$BOLD$CYAN" "$RESET" "$BOLD" "$RESET" "$DIM" "$RESET"
+    printf '    %s6)%s  %sDestroy%s      %s— stop everything and remove arkmanager state%s\n' \
+        "$BOLD$RED" "$RESET" "$BOLD$RED" "$RESET" "$DIM" "$RESET"
+    printf '    %s7)%s  %sExit%s\n' \
+        "$BOLD$CYAN" "$RESET" "$BOLD" "$RESET"
     echo
-    local choice=""
-    read -r -p "  Choice [1]: " choice || true
+    local choice="" p
+    p=$(printf '  %s?%s Choice %s[%s1%s]%s %s>%s ' \
+        "$CYAN" "$RESET" "$DIM" "$BOLD$RESET" "$DIM" "$RESET" "$YELLOW" "$RESET")
+    read -r -p "$p" choice || true
     choice=${choice:-1}
     case "$choice" in
         1|d|deploy)   do_deploy;   press_enter ;;
