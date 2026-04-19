@@ -35,9 +35,19 @@ config/
 
 Renders happen first; overlays copy on top. `config/` is gitignored. Great for Beacon.app exports or hand-tuned configs.
 
+## Reconciliation: removing maps
+
+The role discovers existing map instance configs on disk and compares against the current `maps:` list on every run. Any map that exists on disk but is NOT in the config is treated as an **orphan** and:
+
+1. Stopped via `arkmanager stop @<map> --warn` (broadcasts a shutdown countdown first).
+2. Its instance config at `{{ arkmanager_config_dir }}/instances/<map>.cfg` is deleted.
+3. Its per-map files directory at `{{ arkmanager_config_dir }}/files/<map>/` is deleted.
+
+Savegames under `{{ ark_server_root }}/ShooterGame/Saved/` are preserved, so re-adding a map later resumes from the last save. Back up `/home/{{ ark_user }}/ARK-Backups/` if you want an extra safety net before reconciling.
+
 ## Handlers
 
-- `restart map` — runs `arkmanager restart @<map_name>` for every map, notified when any of the config files or mods change.
+- `restart map` — runs `arkmanager restart @<map_name>` for every currently-configured map, notified when any of the config files or mods change.
 
 ## Known quirk: Game.ini template is opinionated
 

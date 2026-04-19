@@ -1,4 +1,55 @@
 ---
+# Reconcile orphan maps: any map whose instance config exists on disk but
+# is NOT in the current `maps:` list gets stopped and its config removed.
+# Savegames under ark_server_root/ShooterGame/Saved/ are preserved so the
+# map can be re-added later without losing player data.
+
+- name: Discover existing map instance configs
+  find:
+    paths: "{{ arkmanager_config_dir }}/instances"
+    patterns: "*.cfg"
+    excludes: ["instance.cfg.example", "main.cfg"]
+    file_type: file
+  register: _existing_instance_files
+  # find fails if the directory doesn't exist; treat that as "no instances yet".
+  failed_when: false
+
+- name: Compute orphan maps (on disk but not in configured maps list)
+  set_fact:
+    _orphan_maps: >-
+      {{ (_existing_instance_files.files | default([]))
+         | map(attribute='path') | map('basename')
+         | map('regex_replace', '\.cfg$', '') | list
+         | difference(maps | map(attribute='map_name') | list) }}
+
+- name: Report orphan maps about to be removed
+  debug:
+    msg: "Removing orphan map: {{ item }} (stop + delete instance config + delete files dir; savegame preserved)"
+  loop: "{{ _orphan_maps }}"
+  when: _orphan_maps | length > 0
+
+- name: Stop orphan map servers
+  command: "arkmanager stop @{{ item }}"
+  loop: "{{ _orphan_maps }}"
+  become: true
+  become_user: "{{ ark_user }}"
+  failed_when: false
+  changed_when: true
+  # Command module is skipped under --check; the removal tasks below still
+  # report what would change.
+
+- name: Remove orphan map instance config files
+  file:
+    path: "{{ arkmanager_config_dir }}/instances/{{ item }}.cfg"
+    state: absent
+  loop: "{{ _orphan_maps }}"
+
+- name: Remove orphan map per-map files directory
+  file:
+    path: "{{ arkmanager_config_dir }}/files/{{ item }}"
+    state: absent
+  loop: "{{ _orphan_maps }}"
+
 - name: Create the arkmanager files directory
   file:
     path: "{{ arkmanager_config_dir }}/files"
