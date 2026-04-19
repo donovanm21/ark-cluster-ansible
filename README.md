@@ -32,21 +32,26 @@ It's the real configuration behind a running production cluster — hardened, do
 
 ## Quickstart
 
+The quickest path is the TUI bootstrap — it checks your hardware, walks you through picking maps, writes the config, and runs the playbook:
+
 ```bash
-# 1. Clone
 git clone https://github.com/<your-fork>/ark-cluster-ansible.git
 cd ark-cluster-ansible
+sudo ./bootstrap.sh
+```
 
-# 2. Copy and edit the cluster config (gitignored — your values stay local)
+[`bootstrap.sh`](bootstrap.sh) is a whiptail-driven menu with Deploy / Redeploy / Dry-run / Status / Edit / Destroy. It auto-installs `whiptail` and `ansible-core` the first time, then stays out of your way.
+
+Prefer the manual path?
+
+```bash
 cp group_vars/gameservers.yml.example group_vars/gameservers.yml
 cp inventory_remote.example           inventory_remote
 ${EDITOR:-vim} group_vars/gameservers.yml
-
-# 3. Run it
 ansible-playbook -i inventory_remote main.yml
 ```
 
-That's the whole onboarding. If it goes wrong, open an issue — we'd rather fix the playbook than leave you stuck.
+Both paths land in the same place. If something goes wrong, open an issue — we'd rather fix the playbook than leave you stuck.
 
 Prefer a fully-populated starter?
 
