@@ -3,6 +3,8 @@
 </p>
 
 <p align="center">
+  <a href="https://github.com/donovanm21/ark-cluster-ansible/actions/workflows/test.yml"><img alt="CI" src="https://github.com/donovanm21/ark-cluster-ansible/actions/workflows/test.yml/badge.svg?branch=main"/></a>
+  <a href="https://github.com/donovanm21/ark-cluster-ansible/releases/latest"><img alt="Latest release" src="https://img.shields.io/github/v/release/donovanm21/ark-cluster-ansible?sort=semver&color=blue"/></a>
   <a href="LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/license-MIT-yellow.svg"/></a>
   <a href="https://docs.ansible.com/"><img alt="Ansible 2.10+" src="https://img.shields.io/badge/Ansible-2.10%2B-red.svg"/></a>
   <a href="#prerequisites"><img alt="Platform: Ubuntu | Debian" src="https://img.shields.io/badge/platform-Ubuntu%20%7C%20Debian-orange.svg"/></a>
