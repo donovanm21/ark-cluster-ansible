@@ -1,0 +1,74 @@
+---
+# PvE example — a friendly, faster-progression 3-map cluster.
+# Copy to group_vars/gameservers.yml and adjust to taste.
+
+location: "US"           # 2-letter region code for SessionName
+server_tag: "MyCluster"  # short tag shown in the Steam browser
+server_mode: "PvE"
+
+# Optional Discord webhook — lifecycle events (up/down/restart) are posted here.
+# discord_webhook_url: "https://discord.com/api/webhooks/XXXXX/YYYYY"
+
+# Optional external banlist — fetched by ARK on startup.
+# banlist_url: "https://example.com/banlist.txt"
+
+# Friendly progression tuning for PvE (defaults are intentionally moderate).
+taming_speed_multiplier: 5
+harvest_amount_multiplier: 3
+harvest_health_multiplier: 2
+xp_multiplier: 2
+max_tamed_dinos: 10000
+override_official_difficulty: 5
+player_damage_multiplier: 1.0
+
+# PvE-focused decay: structures and dinos decay slowly so players can travel.
+pve_dino_decay_period_multiplier: 5
+pve_structure_decay_period_multiplier: 2.5
+resources_respawn_period_multiplier: 0.75
+
+motd_duration: 15
+motd_message: "Welcome! Keep it friendly. No griefing. See you in game."
+
+# Lifecycle automation — defaults are sensible; tweak if needed.
+enable_daily_restart: true
+daily_update_hour: 4
+enable_dino_wipe: true
+dino_wipe_hours: [0, 12]
+enable_watchdog: true
+watchdog_interval_minutes: 5
+
+# 3-map cluster: pick your maps, give each a unique RCON/ARK/Steam port,
+# share cluster_name so players can transfer between them.
+maps:
+  - map_name_ark: "Ragnarok"
+    map_name: "Ragnarok"
+    map_rcon_port: 32332
+    map_ark_port: 7779
+    map_steam_port: 27017
+    map_admin_password: "CHANGE_ME"
+    map_max_players: 40
+    map_mods_enabled: ""
+    cluster_name: "MyCluster"
+  - map_name_ark: "TheIsland"
+    map_name: "TheIsland"
+    map_rcon_port: 32344
+    map_ark_port: 7791
+    map_steam_port: 27029
+    map_admin_password: "CHANGE_ME"
+    map_max_players: 40
+    map_mods_enabled: ""
+    cluster_name: "MyCluster"
+  - map_name_ark: "ScorchedEarth_P"
+    map_name: "ScorchedEarth"
+    map_rcon_port: 32330
+    map_ark_port: 7777
+    map_steam_port: 27015
+    map_admin_password: "CHANGE_ME"
+    map_max_players: 40
+    map_mods_enabled: ""
+    cluster_name: "MyCluster"
+
+# Players granted in-game admin (cheat commands). 17-digit SteamIDs.
+admins:
+  - 76561190000000001
+  - 76561190000000002

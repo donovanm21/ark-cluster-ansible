@@ -1,0 +1,67 @@
+---
+# PvP example — closer-to-official progression, offline raid protection,
+# tighter turret limits. Copy to group_vars/gameservers.yml and edit.
+
+location: "US"
+server_tag: "MyCluster"
+server_mode: "PvP"
+
+# discord_webhook_url: "https://discord.com/api/webhooks/XXXXX/YYYYY"
+# banlist_url: "https://example.com/banlist.txt"
+
+# Closer to official rates — 2x feels fair, faster than that tilts the meta.
+taming_speed_multiplier: 2
+harvest_amount_multiplier: 2
+harvest_health_multiplier: 2
+xp_multiplier: 2
+max_tamed_dinos: 6000
+override_official_difficulty: 5
+player_damage_multiplier: 1.0
+
+# PvE decay knobs are ignored in PvP (PvPStructureDecay takes over).
+# Leave defaults; override only if you know you want to.
+pve_dino_decay_period_multiplier: 5
+pve_structure_decay_period_multiplier: 2.5
+resources_respawn_period_multiplier: 0.75
+
+motd_duration: 15
+motd_message: "PvP server — build smart, raid smarter. ORP enabled."
+
+enable_daily_restart: true
+daily_update_hour: 4
+enable_dino_wipe: false      # dino wipes on a PvP server are disruptive
+enable_watchdog: true
+watchdog_interval_minutes: 5
+
+# 3-map PvP cluster.
+maps:
+  - map_name_ark: "Ragnarok"
+    map_name: "Ragnarok"
+    map_rcon_port: 32332
+    map_ark_port: 7779
+    map_steam_port: 27017
+    map_admin_password: "CHANGE_ME"
+    map_max_players: 70
+    map_mods_enabled: ""
+    cluster_name: "MyCluster"
+  - map_name_ark: "Aberration_P"
+    map_name: "Aberration"
+    map_rcon_port: 32334
+    map_ark_port: 7781
+    map_steam_port: 27019
+    map_admin_password: "CHANGE_ME"
+    map_max_players: 70
+    map_mods_enabled: ""
+    cluster_name: "MyCluster"
+  - map_name_ark: "Extinction"
+    map_name: "Extinction"
+    map_rcon_port: 32338
+    map_ark_port: 7785
+    map_steam_port: 27023
+    map_admin_password: "CHANGE_ME"
+    map_max_players: 70
+    map_mods_enabled: ""
+    cluster_name: "MyCluster"
+
+admins:
+  - 76561190000000001
